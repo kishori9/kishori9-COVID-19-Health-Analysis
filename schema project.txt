@@ -1,0 +1,178 @@
+CREATE TABLE symptoms (
+  symptom_id NUMBER(19) NOT NULL,
+  symptom_type VARCHAR2(250) NOT NULL,
+  PRIMARY KEY (symptom_id)
+) 
+
+CREATE TABLE age_group (
+age_grp_id INT NOT NULL PRIMARY KEY,
+age_grp_yr VARCHAR (14),
+age_grp_nbr VARCHAR(10),
+age_grp_gen VARCHAR (25)
+);
+
+CREATE TABLE county_zip (
+ctyzip_id INT NOT NULL PRIMARY KEY,
+zip INT,
+fips VARCHAR(10),
+city VARCHAR(50),
+state VARCHAR(40),
+cty_nm VARCHAR(50)
+);
+
+CREATE TABLE race (
+  race_id NUMBER(19) NOT NULL,
+  race_nm VARCHAR2(30) NOT NULL,
+  PRIMARY KEY (race_id)
+) ;
+
+CREATE TABLE problem (
+problem_id INT NOT NULL PRIMARY KEY,
+problem_type VARCHAR(175)
+);
+
+CREATE TABLE income (
+income_id INT NOT NULL PRIMARY KEY,
+income_bracket VARCHAR(175)
+);
+
+CREATE TABLE education (
+education_id INT NOT NULL PRIMARY KEY,
+education_level VARCHAR(175)
+);
+
+CREATE TABLE news_source (
+news_id INT NOT NULL PRIMARY KEY,
+news_src_name VARCHAR(175)
+);
+
+
+
+CREATE TABLE address (
+address_id INT PRIMARY KEY,
+address_ln_1 VARCHAR(80),
+address_ln_2 VARCHAR(40),
+ctyzip_id INT
+);
+
+ALTER TABLE address
+ADD CONSTRAINT FK_ctyzipIDAddress
+FOREIGN KEY (ctyzip_id) REFERENCES county_zip (ctyzip_id);
+
+
+CREATE TABLE nursing (
+nursing_id INT NOT NULL PRIMARY KEY,
+nursing_facility VARCHAR(150),
+address_id INT,
+cases INT,
+deaths INT,
+facility_rating INT
+);
+
+ALTER TABLE nursing
+ADD CONSTRAINT FK_AddressidNursing
+FOREIGN KEY (address_id) REFERENCES address (address_id);
+
+CREATE TABLE covid_cases (
+covcase_id INT NOT NULL PRIMARY KEY,
+ctyzip_id INT,
+total_cases INT,
+total_tested INT,
+nursing_home_cases INT,
+nursing_home_deaths INT
+);
+
+ALTER TABLE covid_cases
+ADD CONSTRAINT FK_CityzipidCountyzip
+FOREIGN KEY (ctyzip_id) REFERENCES county_zip (ctyzip_id);
+
+CREATE TABLE census (
+census_id INT NOT NULL PRIMARY KEY,
+ctyzip_id INT,
+race_id INT,
+median_income INT,
+population_count INT
+);
+
+ALTER TABLE census
+ADD CONSTRAINT FK_cityzipidcountyzip2
+FOREIGN KEY (ctyzip_id) REFERENCES county_zip (ctyzip_id);
+
+CREATE TABLE survey_news (
+survey_id INT NOT NULL,
+news_id INT NOT NULL
+);
+
+ALTER TABLE survey_news
+ADD CONSTRAINT FK_Newsidsurveynews
+FOREIGN KEY (news_id) REFERENCES news_source (news_id);
+
+ALTER TABLE survey_news
+ADD CONSTRAINT FK_Surveyidsurveynews
+FOREIGN KEY (survey_id) REFERENCES respondent (survey_id);
+
+
+CREATE TABLE respondent (
+survey_id INT NOT NULL,
+ctyzip_id INT,
+age_grp_id INT,
+race_id INT,
+gender VARCHAR(10),
+education_id INT,
+income_id INT,
+health_insurance_ind VARCHAR(10),
+read_news_ind VARCHAR(10),
+covid_test_ind VARCHAR(10),
+high_risk_ind VARCHAR(10),
+problem_id INT,
+hosp_visit_ind VARCHAR(10),
+adeq_care_ind VARCHAR(10),
+overwh_hosp_ind VARCHAR(10),
+PRIMARY KEY (survey_id),
+CONSTRAINT FK_CtyzpidRespondent FOREIGN KEY (ctyzip_id)
+REFERENCES county_zip(ctyzip_id),
+CONSTRAINT FK_AgegroupResondent FOREIGN KEY (age_grp_id)
+REFERENCES age_group(age_grp_id),
+CONSTRAINT FK_EducationidRespondent FOREIGN KEY (education_id)
+REFERENCES education(education_id),
+CONSTRAINT FK_IncomeidRespondent FOREIGN KEY (income_id)
+REFERENCES income(income_id)
+);
+
+CREATE TABLE covid_medical_info(
+med_id INT NOT NULL,
+case_number VARCHAR(20),
+date_of_death DATE,
+age INT,
+age_grp_id INT,
+gender VARCHAR(10),
+race_id INT,
+ctyzip_id INT,
+Manner_of_death VARCHAR(30),
+nursing_home_ind VARCHAR(1),
+nursing_id INT,
+incident_address_id INT,
+PRIMARY KEY (med_id),
+CONSTRAINT FK_AgegrpidCovidMedicalInfo FOREIGN KEY (age_grp_id)
+REFERENCES age_group(age_grp_id),
+CONSTRAINT FK_RaceidCovidmedicalinfo FOREIGN KEY (race_id)
+REFERENCES race(race_id),
+CONSTRAINT FK_CtyzipidCovidmed FOREIGN KEY (ctyzip_id)
+REFERENCES county_zip(ctyzip_id)
+);
+
+CREATE TABLE case_symptoms (
+med_id INT NOT NULL,
+symptom_id INT NOT NULL,
+prim_cause_ind VARCHAR(1)
+);
+
+ALTER TABLE case_symptoms
+ADD CONSTRAINT PK_SymptomidCasesymptoms
+PRIMARY KEY (med_id,symptom_id);
+
+ALTER TABLE case_symptoms
+ADD FOREIGN KEY (med_id) REFERENCES covid_medical_info;
+
+ALTER TABLE case_symptoms
+ADD FOREIGN KEY (symptom_id) REFERENCES symptoms;
